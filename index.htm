@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>HTML + CSS</title>
+    <style>
+      .edge {
+        box-sizing: border-box;
+        position: fixed;
+        z-index: 9999;
+        bottom: 0;
+        width: 12px;
+        height: 100dvh;
+        pointer-events: none;
+        user-select: none;
+        background-color: rgba(0, 0, 0, 0);
+      }
+
+      .edge-left {
+        left: 0;
+      }
+
+      .edge-right {
+        right: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="edge edge-left"></div>
+    <div class="edge edge-right"></div>
+
+    <script>
+      const AUDIO_DELAY_RATIO = 0.1;
+      const SOUND_EFFECT_DURATION = 100;
+      const BEEPING_DURATION_RATIO = 0.5;
+
+      let topPadding = 0;
+      let isPlaying = false;
+      let isHide = false;
+      let notesInQueue = [];
+      let tickTimeout = null;
+
+      const toggleBeeping = (isBeeping, displayBpm) => {
+        const edges = document.querySelectorAll('.edge');
+
+        edges.forEach((edge) => {
+          edge.style.background = isBeeping
+            ? 'rgba(0, 0, 0, 1)'
+            : 'rgba(0, 0, 0, 0)';
+          edge.style.transition = isBeeping
+            ? ''
+            : `background-color ${
+                (60 / displayBpm) * AUDIO_DELAY_RATIO
+              }s ease-in`;
+        });
+      };
+
+      const onTick = (params) => {
+        if (tickTimeout) {
+          clearTimeout(tickTimeout);
+        }
+
+        if (params.isOverdue || isHide) return;
+
+        toggleBeeping(true, params.bpm);
+
+        tickTimeout = setTimeout(
+          () => {
+            toggleBeeping(false, params.bpm);
+          },
+          (60 / params.bpm) * BEEPING_DURATION_RATIO * 1000 - params.delayInMs,
+        );
+      };
+
+      const checkTickEvents = () => {
+        if (!isPlaying) {
+          notesInQueue = [];
+          return;
+        }
+
+        const currentTime = Date.now();
+
+        while (notesInQueue.length && notesInQueue[0].time < currentTime) {
+          const currentNote = { ...notesInQueue[0] };
+          notesInQueue.splice(0, 1);
+
+          const delayInMs = currentTime - currentNote.time;
+          const isOverdue = delayInMs > SOUND_EFFECT_DURATION;
+
+          onTick({
+            time: currentNote.time,
+            bpm: currentNote.bpm,
+            delayInMs,
+            isOverdue,
+          });
+        }
+
+        checkTickEventsTimeout = requestAnimationFrame(() => checkTickEvents());
+      };
+
+      const updateTopPadding = () => {
+        const edges = document.querySelectorAll('.edge');
+        edges.forEach((edge) => {
+          edge.style.height = `calc(100dvh - ${topPadding}px)`;
+        });
+      };
+
+      updateTopPadding();
+
+      /**
+       * @typedef {Object} MessageEventData
+       * @property {number} time
+       * @property {number} bpm
+       */
+      window.addEventListener('message', (event) => {
+        if (!('isFromIMSLP' in event.data)) return;
+
+        switch (event.data.type) {
+          case 'note':
+            const note = event.data.note;
+            notesInQueue.push(note);
+            requestAnimationFrame(() => checkTickEvents());
+            break;
+          case 'togglePlay':
+            isPlaying = event.data.isPlaying;
+            break;
+          case 'clearQueue':
+            notesInQueue = [];
+            break;
+          case 'hide':
+            isHide = event.data.isHide;
+            break;
+          case 'updateTopPadding':
+            topPadding = event.data.topPadding;
+            break;
+        }
+      });
+    </script>
+  </body>
+</html>
