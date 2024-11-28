@@ -12,7 +12,7 @@
         z-index: 9999;
         bottom: 0;
         width: 12px;
-        height: 100dvh;
+        height: 100%;
         pointer-events: none;
         user-select: none;
         background-color: rgba(0, 0, 0, 0);
@@ -36,7 +36,6 @@
       const SOUND_EFFECT_DURATION = 100;
       const BEEPING_DURATION_RATIO = 0.5;
 
-      let topPadding = 0;
       let isPlaying = false;
       let isHide = false;
       let notesInQueue = [];
@@ -100,16 +99,6 @@
         checkTickEventsTimeout = requestAnimationFrame(() => checkTickEvents());
       };
 
-      const updateTopPadding = (newValue = 0) => {
-        topPadding = newValue;
-        const edges = document.querySelectorAll('.edge');
-        edges.forEach((edge) => {
-          edge.style.height = `calc(100dvh - ${topPadding}px)`;
-        });
-      };
-
-      updateTopPadding();
-
       /**
        * @typedef {Object} MessageEventData
        * @property {number} time
@@ -132,9 +121,6 @@
             break;
           case 'hide':
             isHide = event.data.isHide;
-            break;
-          case 'updateTopPadding':
-            updateTopPadding(event.data.topPadding);
             break;
         }
       });
