@@ -100,7 +100,8 @@
         checkTickEventsTimeout = requestAnimationFrame(() => checkTickEvents());
       };
 
-      const updateTopPadding = () => {
+      const updateTopPadding = (newValue = 0) => {
+        topPadding = newValue;
         const edges = document.querySelectorAll('.edge');
         edges.forEach((edge) => {
           edge.style.height = `calc(100dvh - ${topPadding}px)`;
@@ -133,7 +134,7 @@
             isHide = event.data.isHide;
             break;
           case 'updateTopPadding':
-            topPadding = event.data.topPadding;
+            updateTopPadding(event.data.topPadding);
             break;
         }
       });
