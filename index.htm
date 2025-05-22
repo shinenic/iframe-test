@@ -103,10 +103,10 @@
       };
 
       const updateHeight = () => {
-        const height = screenHeight - topPadding - bottomPadding;
+        const height = `calc(100dvh - ${topPadding || 0}px - ${bottomPadding || 0}px)`;
 
         edges.forEach((edge) => {
-          edge.style.height = `${height}px`;
+          edge.style.height = height;
           edge.style.marginTop = `${topPadding}px`;
         });
       };
