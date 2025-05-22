@@ -41,6 +41,9 @@
       let notesInQueue = [];
       let tickTimeout = null;
 
+      let topPadding = 0;
+      let bottomPadding = 0;
+
       const toggleBeeping = (isBeeping, displayBpm) => {
         const edges = document.querySelectorAll('.edge');
 
@@ -99,6 +102,15 @@
         checkTickEventsTimeout = requestAnimationFrame(() => checkTickEvents());
       };
 
+      const updateHeight = () => {
+        const height = screenHeight - topPadding - bottomPadding;
+
+        edges.forEach((edge) => {
+          edge.style.height = `${height}px`;
+          edge.style.marginTop = `${topPadding}px`;
+        });
+      };
+
       /**
        * @typedef {Object} MessageEventData
        * @property {number} time
@@ -121,6 +133,14 @@
             break;
           case 'hide':
             isHide = event.data.isHide;
+            break;
+          case 'updateTopPadding':
+            topPadding = event.data.topPadding;
+            updateHeight();
+            break;
+          case 'updateBottomPadding':
+            bottomPadding = event.data.bottomPadding;
+            updateHeight();
             break;
         }
       });
